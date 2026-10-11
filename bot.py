@@ -73,18 +73,44 @@ async def cmd_start(message: types.Message):
     )
 
 
+# ============ АДМИН-КОМАНДЫ ============
+@dp.message(Command("publish"))
+async def cmd_publish(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    if not message.reply_to_message:
+        await message.answer("⚠️ Ответь на сообщение командой /publish")
+        return
+    await handle_admin_reply(message)
+
+
+@dp.message(Command("reject"))
+async def cmd_reject(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    if not message.reply_to_message:
+        await message.answer("⚠️ Ответь на сообщение командой /reject")
+        return
+    await handle_admin_reply(message)
+
+
+@dp.message(Command("edit"))
+async def cmd_edit(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    if not message.reply_to_message:
+        await message.answer("⚠️ Ответь на сообщение командой /edit 
+<текст>")
+        return
+    await handle_admin_reply(message)
+
+
 # ============ ПРИЁМ ОБЪЯВЛЕНИЙ ============
-@dp.message(
-    F.chat.type == "private",
-    ~Command("start"),
-    ~Command("publish"),
-    ~Command("reject"),
-    ~Command("edit"),
-)
+@dp.message(F.chat.type == "private")
 async def handle_ad(message: types.Message):
     if message.from_user.id == ADMIN_ID:
-        if message.reply_to_message:
-            await handle_admin_reply(message)
+        return
+    if message.text and message.text.startswith("/"):
         return
 
     user = message.from_user
