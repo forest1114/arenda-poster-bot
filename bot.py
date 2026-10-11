@@ -13,7 +13,7 @@ from aiogram.types import (
 from aiohttp import web
 
 # ============ НАСТРОЙКИ ============
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "ВСТАВЬ_ТОКЕН_СЮДА")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 ADMIN_ID = 464498182
 CHANNEL_ID = "@arenda_by"
 COLIVING_URL = "https://t.me/colivingbymatch_bot/app"
@@ -23,6 +23,9 @@ PORT = int(os.environ.get("PORT", 8080))
 RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL", "")
 
 logging.basicConfig(level=logging.INFO)
+
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN is not set")
 
 bot = Bot(token=BOT_TOKEN, 
 default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -157,8 +160,9 @@ async def handle_admin_reply(message: types.Message):
 # ============ WEBHOOK ============
 async def handle_webhook(request: web.Request):
     try:
-        update = types.Update.model_validate(await request.json(), 
-context={"bot": bot})
+        update = types.Update.model_validate(
+            await request.json(), context={"bot": bot}
+        )
         await dp.feed_update(bot, update)
     except Exception as e:
         logging.error(f"Webhook error: {e}")
@@ -170,6 +174,9 @@ async def on_startup(app: web.Application):
         webhook_url = f"{RENDER_URL}{WEBHOOK_PATH}"
         await bot.set_webhook(webhook_url)
         logging.info(f"Webhook set: {webhook_url}")
+    else:
+        logging.warning("RENDER_EXTERNAL_URL not set, webhook not 
+configured")
 
 
 async def on_shutdown(app: web.Application):
