@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 
@@ -6,10 +5,7 @@ from aiogram import Bot, Dispatcher, F, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiohttp import web
 
 # ============ НАСТРОЙКИ ============
@@ -78,8 +74,13 @@ async def cmd_start(message: types.Message):
 
 
 # ============ ПРИЁМ ОБЪЯВЛЕНИЙ ============
-@dp.message(F.chat.type == "private", ~Command("start"), 
-~Command("publish"), ~Command("reject"), ~Command("edit"))
+@dp.message(
+    F.chat.type == "private",
+    ~Command("start"),
+    ~Command("publish"),
+    ~Command("reject"),
+    ~Command("edit"),
+)
 async def handle_ad(message: types.Message):
     if message.from_user.id == ADMIN_ID:
         if message.reply_to_message:
@@ -160,9 +161,8 @@ async def handle_admin_reply(message: types.Message):
 # ============ WEBHOOK ============
 async def handle_webhook(request: web.Request):
     try:
-        update = types.Update.model_validate(
-            await request.json(), context={"bot": bot}
-        )
+        data = await request.json()
+        update = types.Update.model_validate(data, context={"bot": bot})
         await dp.feed_update(bot, update)
     except Exception as e:
         logging.error(f"Webhook error: {e}")
@@ -175,8 +175,8 @@ async def on_startup(app: web.Application):
         await bot.set_webhook(webhook_url)
         logging.info(f"Webhook set: {webhook_url}")
     else:
-        logging.warning("RENDER_EXTERNAL_URL not set, webhook not 
-configured")
+        msg = "RENDER_EXTERNAL_URL not set, webhook not configured"
+        logging.warning(msg)
 
 
 async def on_shutdown(app: web.Application):
